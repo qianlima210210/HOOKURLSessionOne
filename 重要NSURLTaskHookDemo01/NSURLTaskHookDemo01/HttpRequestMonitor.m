@@ -207,6 +207,7 @@
 }
 
 +(NSURLSession *)aop_sessionWithConfiguration:(NSURLSessionConfiguration *)configuration delegate:(nullable id <NSURLSessionDelegate>)delegate delegateQueue:(nullable NSOperationQueue *)queue{
+    //只判断代理是否实现了URLSession:task:didCompleteWithError:，估计还是不够的；能否在没实现的情况下自己添加该方法的实现呢？，这样结束时间就不会丢了。
     if ([delegate respondsToSelector:@selector(URLSession:task:didCompleteWithError:)]) {
         [HttpRequestMonitor prepareSwizzleURLSessionTaskDidCompleteWithErrorMethodForClass:delegate.class];
     }
