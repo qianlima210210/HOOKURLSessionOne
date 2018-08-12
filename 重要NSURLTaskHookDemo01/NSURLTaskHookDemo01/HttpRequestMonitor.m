@@ -210,6 +210,13 @@
     //只判断代理是否实现了URLSession:task:didCompleteWithError:，估计还是不够的；能否在没实现的情况下自己添加该方法的实现呢？，这样结束时间就不会丢了。
     if ([delegate respondsToSelector:@selector(URLSession:task:didCompleteWithError:)]) {
         [HttpRequestMonitor prepareSwizzleURLSessionTaskDidCompleteWithErrorMethodForClass:delegate.class];
+    }else{
+        //没实现，我帮你添加
+        Method none_URLSessionTaskDidCompleteWithErrorMethod = class_getInstanceMethod(HttpRequestMonitor.class, @selector(none_URLSession:task:didCompleteWithError:));
+        
+        if([self addMethodWithClass:delegate.class sel:@selector(URLSession:task:didCompleteWithError:) method:none_URLSessionTaskDidCompleteWithErrorMethod]){
+            [HttpRequestMonitor prepareSwizzleURLSessionTaskDidCompleteWithErrorMethodForClass:delegate.class];
+        }
     }
     
     return [self aop_sessionWithConfiguration:configuration delegate:delegate delegateQueue:queue];
@@ -220,6 +227,12 @@ didCompleteWithError:(nullable NSError *)error{
     
     [HttpRequestMonitor.shared addEndDateByResponse:(NSHTTPURLResponse*)task.response error:error];
     [self aop_URLSession:session task:task didCompleteWithError:error];
+}
+
+#pragma mark -- 没实现的代理方法
+-(void)none_URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
+ didCompleteWithError:(nullable NSError *)error{
+    
 }
 
 #pragma mark -- 自己的
