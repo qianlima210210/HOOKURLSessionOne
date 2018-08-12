@@ -22,10 +22,10 @@
 }
 - (IBAction)btnClicked:(id)sender {
 
-    [self baiduRequest];
-    [self csdnRequest];
-    [self baiduRequest];
-    [self csdnRequest];
+//    [self baiduRequest];
+//    [self csdnRequest];
+//    [self baiduRequest];
+//    [self csdnRequest];
     
     [self baiduRequestWithDelegate];
 }
@@ -47,23 +47,32 @@
 #pragma mark -- NSURLSessionTaskDelegate
 /* Sent as the last message related to a specific task.  Error may be
  * nil, which implies that no error occurred and this task is complete.
+ 也是接收最后一个字节的结束点
  */
-//- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
-//didCompleteWithError:(nullable NSError *)error{
-//    NSLog(@"error = %@", error);
-//}
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
+didCompleteWithError:(nullable NSError *)error{
+    NSLog(@"error = %@", error);
+}
 
 
 #pragma mark -- NSURLSessionDataDelegate
+//也是接收第一个字节的开始点
+- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask
+didReceiveResponse:(NSURLResponse *)response
+ completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler{
+    completionHandler(NSURLSessionResponseAllow);
+    NSLog(@"%s", __func__);
+}
+
 /* Sent when data is available for the delegate to consume.  It is
  * assumed that the delegate will retain and not copy the data.  As
  * the data may be discontiguous, you should use
  * [NSData enumerateByteRangesUsingBlock:] to access it.
  */
-//- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask
-//    didReceiveData:(NSData *)data{
-//    //NSLog(@"didReceiveData = %@", [[NSString alloc]initWithData:data encoding:4]);
-//}
+- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask
+    didReceiveData:(NSData *)data{
+    //NSLog(@"didReceiveData = %@", [[NSString alloc]initWithData:data encoding:4]);
+}
 
 #pragma mark -------
 

@@ -7,6 +7,7 @@
 //
 
 #import "AppDelegate.h"
+#import <execinfo.h>
 
 @interface AppDelegate ()
 
@@ -14,9 +15,57 @@
 
 @implementation AppDelegate
 
+void HandleException(NSException *exception) {
+    NSArray *stackArray = [exception callStackSymbols];
+    NSString *reason = [exception reason];
+    NSString *name = [exception name];
+    NSString *exceptionInfo = [NSString stringWithFormat:@"Exception reason：%@\nException name：%@\nException stack：%@",name, reason, stackArray];
+    NSLog(@"%@", exceptionInfo);
+}
+
+void SignalExceptionHandler(int signal){
+    
+    NSMutableString *mstr = [[NSMutableString alloc] init];
+    [mstr appendString:@"Stack:\n"];
+    void* callstack[128];//堆栈方法数组
+    int i, frames = backtrace(callstack, 128);//从iOS的方法backtrace中获取错误堆栈方法指针数组，返回数目
+    char** strs = backtrace_symbols(callstack, frames);//符号化
+    
+    for (i = 0; i <frames; ++i) {
+        [mstr appendFormat:@"%s\n", strs[i]];
+    }
+
+    NSString *documents = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
+    NSString *path = [documents stringByAppendingPathComponent:@"signal.txt"];
+    
+    [mstr writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
+}
+
+//关于signal信号的捕捉，在Xcode调试时，Debugger模式会先于我们的代码catch到所有的crash，
+//所以需要直接从模拟器中进入程序才可以测试
+void InstallSignalHandler(void) {
+    signal(SIGHUP, SignalExceptionHandler);
+    signal(SIGINT, SignalExceptionHandler);
+    signal(SIGQUIT, SignalExceptionHandler);
+    signal(SIGABRT, SignalExceptionHandler);
+    signal(SIGILL, SignalExceptionHandler);
+    signal(SIGSEGV, SignalExceptionHandler);
+    signal(SIGFPE, SignalExceptionHandler);
+    signal(SIGBUS, SignalExceptionHandler);
+    signal(SIGPIPE, SignalExceptionHandler);
+}
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
+    InstallSignalHandler();
+    NSSetUncaughtExceptionHandler(HandleException);
+    
+//    NSArray *array = @[@""];
+//    array[1];
+    
+    int *i;
+    free(i);
+    
     return YES;
 }
 
